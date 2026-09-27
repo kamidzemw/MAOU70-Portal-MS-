@@ -16,8 +16,13 @@ async function bootNav(){
   const p=await profile(), u=await user();
   const el=document.querySelector('[data-auth]');
   if(el){
-    if(u) el.innerHTML=`<a href="profile.html">👤 ${esc(p?.first_name||p?.name||'Профиль')}</a><button class="btn" id="logout">Выйти</button>`;
-    else el.innerHTML=`<a class="btn primary" href="auth.html">Войти</a>`;
+    if(u){
+      const displayName = p?.nickname || p?.first_name || p?.name || 'Ученик';
+      const avatar = p?.avatar_emoji || '👤';
+      el.innerHTML=`<div class="auth-actions"><a class="auth-user" href="profile.html">${esc(avatar)} <span>${esc(displayName)}</span></a><button class="btn logout-btn" id="logout">Выйти</button></div>`;
+    } else {
+      el.innerHTML=`<a class="btn primary login-btn" href="auth.html">Войти</a>`;
+    }
     document.getElementById('logout')?.addEventListener('click',async()=>{await db.auth.signOut();location.href='index.html'});
   }
   document.querySelector('[data-admin-link]')?.classList.toggle('hidden',p?.role!=='admin');

@@ -1,12 +1,112 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Админ-панель</title><link rel="stylesheet" href="styles.css"></head><body><main class="wrap page"><div class="page-head"><div><a class="muted" href="index.html">← Портал</a><h1>Админ-панель</h1><p class="muted">Управление идеями, мемами, новостями, событиями и опросами.</p></div></div><div id="guard" class="card">Проверка доступа...</div><div id="panel" class="hidden"><section class="card"><h2>💡 Идеи</h2><div id="ideas" class="list"></div></section><section class="card" style="margin-top:16px"><h2>😂 Мемы на модерации</h2><div id="memes" class="list"></div></section><section class="card" style="margin-top:16px"><h2>📢 Добавить новость</h2><form id="newsForm" class="form"><input id="nt" placeholder="Заголовок" required><textarea id="nb" placeholder="Текст" required></textarea><button class="btn primary">Опубликовать</button></form><div id="nmsg"></div></section><section class="card" style="margin-top:16px"><h2>📅 Добавить мероприятие</h2><form id="eventForm" class="form"><input id="et" placeholder="Название" required><input id="ed" type="datetime-local" required><input id="el" placeholder="Место"><textarea id="eb" placeholder="Описание"></textarea><button class="btn primary">Опубликовать</button></form><div id="emsg"></div></section></div></main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="app.js"></script><script>
+<!doctype html><html lang="ru"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Админ-панель — МАОУ СОШ №70</title><link rel="stylesheet" href="styles.css"></head>
+<body><main class="wrap page">
+<div class="page-head"><div><a class="muted" href="index.html">← Портал</a><h1>Админ-панель</h1><p class="muted">Здесь ты управляешь идеями, мемами, новостями, мероприятиями и опросами.</p></div></div>
+<div id="guard" class="card">Проверка доступа...</div>
+<div id="panel" class="hidden">
+  <div class="admin-grid">
+    <section class="card admin-card"><h2>💡 Идеи</h2><div id="ideas" class="list">Загрузка...</div></section>
+    <section class="card admin-card"><h2>😂 Мемы на модерации</h2><p class="muted">Проверь мем, при необходимости измени подпись или замени картинку. Перед публикацией можно выбрать, показывать ли ник автора.</p><div id="memes" class="list">Загрузка...</div></section>
+  </div>
+
+
+  <section class="card" style="margin-top:16px"><h2>👥 Администраторы</h2><p class="muted">Введи email зарегистрированного пользователя — он получит права администратора.</p><form id="adminForm" class="form"><input id="adminEmail" type="email" placeholder="email ученика" required><button class="btn primary">Сделать администратором</button></form><div id="adminMsg" class="hidden"></div><div id="adminList" class="list" style="margin-top:14px">Загрузка...</div></section>
+  <section class="card" style="margin-top:16px"><h2>🗳 Создать опрос</h2>
+    <form id="pollForm" class="form">
+      <input id="pollQuestion" placeholder="Вопрос опроса" required maxlength="300">
+      <div id="pollOptions" class="poll-admin-options"></div>
+      <div class="admin-actions"><button type="button" class="btn" id="addOption">+ Добавить вариант</button><button class="btn primary">Опубликовать опрос</button></div>
+    </form><div id="pollMsg" class="hidden"></div>
+    <div id="pollAdminList" class="poll-admin-list"></div>
+  </section>
+
+  <section class="card" style="margin-top:16px"><h2>📢 Добавить новость</h2><form id="newsForm" class="form"><input id="nt" placeholder="Заголовок" required><textarea id="nb" placeholder="Текст" required></textarea><button class="btn primary">Опубликовать</button></form><div id="nmsg"></div></section>
+  <section class="card" style="margin-top:16px"><h2>📅 Добавить мероприятие</h2><form id="eventForm" class="form"><input id="et" placeholder="Название" required><input id="ed" type="datetime-local" required><input id="el" placeholder="Место"><textarea id="eb" placeholder="Описание"></textarea><button class="btn primary">Опубликовать</button></form><div id="emsg"></div></section>
+</div></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="app.js"></script>
+<script>
 let admin;
-async function start(){admin=await Portal.profile();if(admin?.role!=='admin'){guard.innerHTML='<div class="error">Доступ только для администратора.</div>';return}guard.classList.add('hidden');panel.classList.remove('hidden');loadIdeas();loadMemes()}
-async function loadIdeas(){const {data,error}=await Portal.db.from('ideas').select('*,profiles:safe_author(author_name,surname,first_name,class_name)').order('created_at',{ascending:false}).limit(100);if(error)return ideas.innerHTML='<div class="error">'+Portal.esc(error.message)+'</div>';ideas.innerHTML=(data||[]).map(i=>`<article class="item"><div class="item-head"><div><h3>${Portal.esc(i.title)}</h3><div class="meta">${Portal.esc(i.author_name||'Ученик')} · ${Portal.esc(i.category)}</div></div><select onchange="setStatus(${i.id},this.value)"><option value="new" ${i.status==='new'?'selected':''}>Новая</option><option value="in_progress" ${i.status==='in_progress'?'selected':''}>В работе</option><option value="done" ${i.status==='done'?'selected':''}>Выполнено</option><option value="rejected" ${i.status==='rejected'?'selected':''}>Не можем</option></select></div><p>${Portal.esc(i.description)}</p><div class="meta">Создано: ${Portal.fmt(i.created_at)}</div></article>`).join('')||'<div class="empty">Идей нет.</div>'}
-async function setStatus(id,status){const r=await Portal.db.from('ideas').update({status}).eq('id',id);if(r.error)alert(r.error.message);else loadIdeas()}
-async function loadMemes(){const {data,error}=await Portal.db.from('memes').select('*').eq('status','pending').order('created_at',{ascending:true});if(error)return memes.innerHTML='<div class="error">'+Portal.esc(error.message)+'</div>';memes.innerHTML=(data||[]).map(m=>`<article class="item"><img src="${Portal.esc(m.image_url)}" style="max-width:240px;border-radius:12px"><p>${Portal.esc(m.caption||'')}</p><button class="btn primary" onclick="moderate('${m.id}','published')">Опубликовать</button> <button class="btn danger" onclick="moderate('${m.id}','rejected')">Отклонить</button></article>`).join('')||'<div class="empty">Новых мемов нет.</div>'}
-async function moderate(id,status){const r=await Portal.db.from('memes').update({status,moderated_by:admin.id,moderated_at:new Date().toISOString()}).eq('id',id);if(r.error)alert(r.error.message);else loadMemes()}
-newsForm.onsubmit=async e=>{e.preventDefault();const r=await Portal.db.from('news').insert({title:nt.value.trim(),body:nb.value.trim(),created_by:admin.id,published:true});if(r.error)return msg(nmsg,r.error.message);e.target.reset();msg(nmsg,'Новость опубликована','success')}
-eventForm.onsubmit=async e=>{e.preventDefault();const r=await Portal.db.from('events').insert({title:et.value.trim(),event_date:new Date(ed.value).toISOString(),location:el.value.trim(),description:eb.value.trim(),created_by:admin.id,published:true});if(r.error)return msg(emsg,r.error.message);e.target.reset();msg(emsg,'Мероприятие опубликовано','success')}
+const $=id=>document.getElementById(id);
+
+async function start(){
+  admin=await Portal.profile();
+  if(admin?.role!=='admin'){
+    $('guard').innerHTML='<div class="error">Доступ только для администратора.</div>';
+    return;
+  }
+  $('guard').classList.add('hidden');
+  $('panel').classList.remove('hidden');
+  addOption(); addOption();
+  await Promise.all([loadIdeas(),loadMemes(),loadPolls(),loadAdmins()]);
+}
+
+async function loadIdeas(){
+  const {data,error}=await Portal.db.from('ideas').select('*,profiles:safe_author(author_name,surname,first_name,class_name)').order('created_at',{ascending:false}).limit(100);
+  if(error)return $('ideas').innerHTML='<div class="error">'+Portal.esc(error.message)+'</div>';
+  $('ideas').innerHTML=(data||[]).map(i=>`<article class="item"><div class="item-head"><div><h3>${Portal.esc(i.title)}</h3><div class="meta">${Portal.esc(i.author_name||'Ученик')} · ${Portal.esc(i.class_name||'Класс не указан')} · ${Portal.esc(i.category)}</div></div><select onchange="setStatus(${i.id},this.value)"><option value="new" ${i.status==='new'?'selected':''}>Новая</option><option value="in_progress" ${i.status==='in_progress'?'selected':''}>В работе</option><option value="done" ${i.status==='done'?'selected':''}>Выполнено</option><option value="rejected" ${i.status==='rejected'?'selected':''}>Не можем</option></select></div><p>${Portal.esc(i.description)}</p><div class="meta">Создано: ${Portal.fmt(i.created_at)}</div></article>`).join('')||'<div class="empty">Идей нет.</div>';
+}
+
+async function setStatus(id,status){
+  const r=await Portal.db.from('ideas').update({status}).eq('id',id);
+  if(r.error)alert(r.error.message);else loadIdeas();
+}
+
+async function loadMemes(){
+  const {data,error}=await Portal.db.from('memes').select('*,profiles:author_id(first_name,surname,nickname,class_name,avatar_emoji)').eq('status','pending').order('created_at',{ascending:true});
+  if(error)return $('memes').innerHTML='<div class="error">'+Portal.esc(error.message)+'</div>';
+  $('memes').innerHTML=(data||[]).map(m=>`<article class="item"><div class="moderation-preview"><img src="${Portal.esc(m.image_url)}" alt="Мем"><div><div class="meta" style="margin:0 0 8px">Автор: ${Portal.esc(m.profiles?.nickname||m.profiles?.first_name||'Ученик')} · ${Portal.esc(m.profiles?.class_name||'Класс не указан')}</div><label>Подпись</label><textarea class="edit-caption" id="cap-${m.id}">${Portal.esc(m.caption||'')}</textarea><label style="display:block;margin-top:10px">Заменить изображение (необязательно)</label><input type="file" id="file-${m.id}" accept="image/jpeg,image/png,image/webp"><label class="switch-row"><input type="checkbox" id="show-${m.id}" ${m.show_author?'checked':''}><span>Показывать ник автора при публикации</span></label><div class="admin-actions"><button class="btn primary" onclick="moderate('${m.id}','published')">Сохранить и опубликовать</button><button class="btn danger" onclick="moderate('${m.id}','rejected')">Отклонить</button></div><div class="meta">Отправлено: ${Portal.fmt(m.created_at)}</div></div></div></article>`).join('')||'<div class="empty">Новых мемов нет.</div>';
+}
+
+async function moderate(id,status){
+  const caption=$('cap-'+id)?.value.trim()||'';
+  const file=$('file-'+id)?.files?.[0];
+  const patch={caption,status,show_author:!!$('show-'+id)?.checked,moderated_by:admin.id,moderated_at:new Date().toISOString()};
+  if(file){
+    if(file.size>5*1024*1024)return alert('Новая картинка должна быть до 5 МБ.');
+    const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
+    const path=`${admin.id}/${crypto.randomUUID()}.${ext}`;
+    const up=await Portal.db.storage.from('memes').upload(path,file,{contentType:file.type,upsert:false});
+    if(up.error)return alert(up.error.message);
+    const {data:pub}=Portal.db.storage.from('memes').getPublicUrl(path);
+    patch.image_path=path;patch.image_url=pub.publicUrl;
+  }
+  const r=await Portal.db.from('memes').update(patch).eq('id',id);
+  if(r.error)alert(r.error.message);else loadMemes();
+}
+
+function addOption(value=''){
+  const row=document.createElement('div');row.className='poll-admin-option';
+  row.innerHTML=`<input class="poll-option-input" placeholder="Вариант ответа" maxlength="150" value="${Portal.esc(value)}"><button type="button" class="btn danger">×</button>`;
+  row.querySelector('button').onclick=()=>row.remove();$('pollOptions').appendChild(row);
+}
+$('addOption').onclick=()=>addOption();
+
+$('pollForm').onsubmit=async e=>{
+  e.preventDefault();
+  const question=$('pollQuestion').value.trim();
+  const options=[...document.querySelectorAll('.poll-option-input')].map(x=>x.value.trim()).filter(Boolean);
+  if(options.length<2)return Portal.msg($('pollMsg'),'Добавь минимум 2 варианта ответа.');
+  const ins=await Portal.db.from('polls').insert({question,created_by:admin.id,published:true}).select().single();
+  if(ins.error)return Portal.msg($('pollMsg'),ins.error.message);
+  const rows=options.map(option_text=>({poll_id:ins.data.id,option_text}));
+  const op=await Portal.db.from('poll_options').insert(rows);
+  if(op.error){await Portal.db.from('polls').delete().eq('id',ins.data.id);return Portal.msg($('pollMsg'),op.error.message)}
+  e.target.reset();$('pollOptions').innerHTML='';addOption();addOption();Portal.msg($('pollMsg'),'Опрос опубликован.','success');loadPolls();
+};
+
+async function loadPolls(){
+  const {data,error}=await Portal.db.from('polls').select('*,poll_options(*)').order('created_at',{ascending:false}).limit(30);
+  if(error)return $('pollAdminList').innerHTML='<div class="error">'+Portal.esc(error.message)+'</div>';
+  $('pollAdminList').innerHTML=(data||[]).map(p=>`<div class="poll-admin-row"><div><strong>${Portal.esc(p.question)}</strong><div class="meta">${p.published?'Опубликован':'Скрыт'} · ${(p.poll_options||[]).length} вариантов</div></div><button class="btn danger" onclick="deletePoll('${p.id}')">Удалить</button></div>`).join('')||'<div class="empty">Опросов пока нет.</div>';
+}
+async function deletePoll(id){if(!confirm('Удалить этот опрос?'))return;const r=await Portal.db.from('polls').delete().eq('id',id);if(r.error)alert(r.error.message);else loadPolls()}
+
+async function loadAdmins(){const {data,error}=await Portal.db.from('profiles').select('id,first_name,surname,nickname,avatar_emoji,role').eq('role','admin').order('created_at',{ascending:true});if(error)return $('adminList').innerHTML='<div class="error">'+Portal.esc(error.message)+'</div>';$('adminList').innerHTML=(data||[]).map(a=>`<div class="poll-admin-row"><div><strong>${Portal.esc(a.avatar_emoji||'👤')} ${Portal.esc(a.nickname||a.first_name||a.name||'Администратор')}</strong><div class="meta">${Portal.esc(a.first_name||'')} ${Portal.esc(a.surname||'')} · ${a.id===admin.id?'Вы':''}</div></div>${a.id===admin.id?'':`<button class="btn danger" onclick="removeAdmin('${a.id}')">Снять права</button>`}</div>`).join('')||'<div class="empty">Администраторов нет.</div>'}
+async function removeAdmin(id){if(!confirm('Снять права администратора?'))return;const r=await Portal.db.rpc('set_user_admin',{p_user_id:id,p_is_admin:false});if(r.error)alert(r.error.message);else loadAdmins()}
+$('adminForm').onsubmit=async e=>{e.preventDefault();const email=$('adminEmail').value.trim();const r=await Portal.db.rpc('set_user_admin_by_email',{p_email:email,p_is_admin:true});if(r.error)return Portal.msg($('adminMsg'),r.error.message);e.target.reset();Portal.msg($('adminMsg'),'Права администратора выданы.','success');loadAdmins()};
+
+$('newsForm').onsubmit=async e=>{e.preventDefault();const r=await Portal.db.from('news').insert({title:$('nt').value.trim(),body:$('nb').value.trim(),created_by:admin.id,published:true});if(r.error)return Portal.msg($('nmsg'),r.error.message);e.target.reset();Portal.msg($('nmsg'),'Новость опубликована','success')};
+$('eventForm').onsubmit=async e=>{e.preventDefault();const r=await Portal.db.from('events').insert({title:$('et').value.trim(),event_date:new Date($('ed').value).toISOString(),location:$('el').value.trim(),description:$('eb').value.trim(),created_by:admin.id,published:true});if(r.error)return Portal.msg($('emsg'),r.error.message);e.target.reset();Portal.msg($('emsg'),'Мероприятие опубликовано','success')};
 start();
 </script></body></html>

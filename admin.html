@@ -21,8 +21,8 @@
     <div id="pollAdminList" class="poll-admin-list"></div>
   </section>
 
-  <section class="card" style="margin-top:16px"><h2>📢 Добавить новость</h2><form id="newsForm" class="form"><input id="nt" placeholder="Заголовок" required><textarea id="nb" placeholder="Текст" required></textarea><button class="btn primary">Опубликовать</button></form><div id="nmsg"></div></section>
-  <section class="card" style="margin-top:16px"><h2>📅 Добавить мероприятие</h2><form id="eventForm" class="form"><input id="et" placeholder="Название" required><input id="ed" type="datetime-local" required><input id="el" placeholder="Место"><textarea id="eb" placeholder="Описание"></textarea><button class="btn primary">Опубликовать</button></form><div id="emsg"></div></section>
+  <section class="card" style="margin-top:16px"><h2>📢 Новости</h2><form id="newsForm" class="form"><input id="nt" placeholder="Заголовок" required><textarea id="nb" placeholder="Текст" required></textarea><button class="btn primary">Опубликовать</button></form><div id="nmsg"></div><div id="newsList" class="list" style="margin-top:14px">Загрузка...</div></section>
+  <section class="card" style="margin-top:16px"><h2>📅 Мероприятия</h2><form id="eventForm" class="form"><input id="et" placeholder="Название" required><input id="ed" type="datetime-local" required><input id="el" placeholder="Место"><textarea id="eb" placeholder="Описание"></textarea><button class="btn primary">Опубликовать</button></form><div id="emsg"></div><div id="eventsList" class="list" style="margin-top:14px">Загрузка...</div></section>
 </div></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="app.js"></script>
 <script>
@@ -38,14 +38,16 @@ async function start(){
   $('guard').classList.add('hidden');
   $('panel').classList.remove('hidden');
   addOption(); addOption();
-  await Promise.all([loadIdeas(),loadMemes(),loadPolls(),loadAdmins()]);
+  await Promise.all([loadIdeas(),loadMemes(),loadPolls(),loadAdmins(),loadNews(),loadEvents()]);
 }
 
 async function loadIdeas(){
   const {data,error}=await Portal.db.from('ideas').select('*,profiles:safe_author(author_name,surname,first_name,class_name)').order('created_at',{ascending:false}).limit(100);
   if(error)return $('ideas').innerHTML='<div class="error">'+Portal.esc(error.message)+'</div>';
-  $('ideas').innerHTML=(data||[]).map(i=>`<article class="item"><div class="item-head"><div><h3>${Portal.esc(i.title)}</h3><div class="meta">${Portal.esc(i.author_name||'Ученик')} · ${Portal.esc(i.class_name||'Класс не указан')} · ${Portal.esc(i.category)}</div></div><select onchange="setStatus(${i.id},this.value)"><option value="new" ${i.status==='new'?'selected':''}>Новая</option><option value="in_progress" ${i.status==='in_progress'?'selected':''}>В работе</option><option value="done" ${i.status==='done'?'selected':''}>Выполнено</option><option value="rejected" ${i.status==='rejected'?'selected':''}>Не можем</option></select></div><p>${Portal.esc(i.description)}</p><div class="meta">Создано: ${Portal.fmt(i.created_at)}</div></article>`).join('')||'<div class="empty">Идей нет.</div>';
+  $('ideas').innerHTML=(data||[]).map(i=>`<article class="item"><div class="item-head"><div><h3>${Portal.esc(i.title)}</h3><div class="meta">${Portal.esc(i.author_name||'Ученик')} · ${Portal.esc(i.class_name||'Класс не указан')} · ${Portal.esc(i.category)}</div></div><select onchange="setStatus(${i.id},this.value)"><option value="new" ${i.status==='new'?'selected':''}>Новая</option><option value="in_progress" ${i.status==='in_progress'?'selected':''}>В работе</option><option value="done" ${i.status==='done'?'selected':''}>Выполнено</option><option value="rejected" ${i.status==='rejected'?'selected':''}>Не можем</option></select></div><p>${Portal.esc(i.description)}</p><div class="meta">Создано: ${Portal.fmt(i.created_at)}</div><div class="admin-actions"><button class="btn danger" onclick="deleteIdea(${i.id})">🗑 Удалить</button></div></article>`).join('')||'<div class="empty">Идей нет.</div>';
 }
+
+async function deleteIdea(id){if(!confirm('Удалить эту идею?'))return;const r=await Portal.db.from('ideas').delete().eq('id',id);if(r.error)alert(r.error.message);else loadIdeas()}
 
 async function setStatus(id,status){
   const r=await Portal.db.from('ideas').update({status}).eq('id',id);
@@ -55,8 +57,10 @@ async function setStatus(id,status){
 async function loadMemes(){
   const {data,error}=await Portal.db.from('memes').select('*,profiles:author_id(first_name,surname,nickname,class_name,avatar_emoji)').eq('status','pending').order('created_at',{ascending:true});
   if(error)return $('memes').innerHTML='<div class="error">'+Portal.esc(error.message)+'</div>';
-  $('memes').innerHTML=(data||[]).map(m=>`<article class="item"><div class="moderation-preview"><img src="${Portal.esc(m.image_url)}" alt="Мем"><div><div class="meta" style="margin:0 0 8px">Автор: ${Portal.esc(m.profiles?.nickname||m.profiles?.first_name||'Ученик')} · ${Portal.esc(m.profiles?.class_name||'Класс не указан')}</div><label>Подпись</label><textarea class="edit-caption" id="cap-${m.id}">${Portal.esc(m.caption||'')}</textarea><label style="display:block;margin-top:10px">Заменить изображение (необязательно)</label><input type="file" id="file-${m.id}" accept="image/jpeg,image/png,image/webp"><label class="switch-row"><input type="checkbox" id="show-${m.id}" ${m.show_author?'checked':''}><span>Показывать ник автора при публикации</span></label><div class="admin-actions"><button class="btn primary" onclick="moderate('${m.id}','published')">Сохранить и опубликовать</button><button class="btn danger" onclick="moderate('${m.id}','rejected')">Отклонить</button></div><div class="meta">Отправлено: ${Portal.fmt(m.created_at)}</div></div></div></article>`).join('')||'<div class="empty">Новых мемов нет.</div>';
+  $('memes').innerHTML=(data||[]).map(m=>`<article class="item"><div class="moderation-preview"><img src="${Portal.esc(m.image_url)}" alt="Мем"><div><div class="meta" style="margin:0 0 8px">Автор: ${Portal.esc(m.profiles?.nickname||m.profiles?.first_name||'Ученик')} · ${Portal.esc(m.profiles?.class_name||'Класс не указан')}</div><label>Подпись</label><textarea class="edit-caption" id="cap-${m.id}">${Portal.esc(m.caption||'')}</textarea><label style="display:block;margin-top:10px">Заменить изображение (необязательно)</label><input type="file" id="file-${m.id}" accept="image/jpeg,image/png,image/webp"><label class="switch-row"><input type="checkbox" id="show-${m.id}" ${m.show_author?'checked':''}><span>Показывать ник автора при публикации</span></label><div class="admin-actions"><button class="btn primary" onclick="moderate('${m.id}','published')">Сохранить и опубликовать</button><button class="btn danger" onclick="moderate('${m.id}','rejected')">Отклонить</button><button class="btn danger" onclick="deleteMeme('${m.id}')">🗑 Удалить</button></div><div class="meta">Отправлено: ${Portal.fmt(m.created_at)}</div></div></div></article>`).join('')||'<div class="empty">Новых мемов нет.</div>';
 }
+
+async function deleteMeme(id){if(!confirm('Удалить этот мем навсегда?'))return;const r=await Portal.db.from('memes').delete().eq('id',id);if(r.error)alert(r.error.message);else loadMemes()}
 
 async function moderate(id,status){
   const caption=$('cap-'+id)?.value.trim()||'';
@@ -102,11 +106,17 @@ async function loadPolls(){
 }
 async function deletePoll(id){if(!confirm('Удалить этот опрос?'))return;const r=await Portal.db.from('polls').delete().eq('id',id);if(r.error)alert(r.error.message);else loadPolls()}
 
+async function loadNews(){const {data,error}=await Portal.db.from('news').select('*').order('created_at',{ascending:false}).limit(50);if(error)return $('newsList').innerHTML='<div class="error">'+Portal.esc(error.message)+'</div>';$('newsList').innerHTML=(data||[]).map(n=>`<div class="poll-admin-row"><div><strong>${Portal.esc(n.title)}</strong><div class="meta">${Portal.fmt(n.created_at)} · ${n.published?'Опубликована':'Скрыта'}</div></div><button class="btn danger" onclick="deleteNews('${n.id}')">🗑 Удалить</button></div>`).join('')||'<div class="empty">Новостей пока нет.</div>'}
+async function deleteNews(id){if(!confirm('Удалить эту новость?'))return;const r=await Portal.db.from('news').delete().eq('id',id);if(r.error)alert(r.error.message);else loadNews()}
+
+async function loadEvents(){const {data,error}=await Portal.db.from('events').select('*').order('event_date',{ascending:true}).limit(50);if(error)return $('eventsList').innerHTML='<div class="error">'+Portal.esc(error.message)+'</div>';$('eventsList').innerHTML=(data||[]).map(e=>`<div class="poll-admin-row"><div><strong>${Portal.esc(e.title)}</strong><div class="meta">${Portal.fmt(e.event_date)}${e.location?' · '+Portal.esc(e.location):''} · ${e.published?'Опубликовано':'Скрыто'}</div></div><button class="btn danger" onclick="deleteEvent('${e.id}')">🗑 Удалить</button></div>`).join('')||'<div class="empty">Мероприятий пока нет.</div>'}
+async function deleteEvent(id){if(!confirm('Удалить это мероприятие?'))return;const r=await Portal.db.from('events').delete().eq('id',id);if(r.error)alert(r.error.message);else loadEvents()}
+
 async function loadAdmins(){const {data,error}=await Portal.db.from('profiles').select('id,first_name,surname,nickname,avatar_emoji,role').eq('role','admin').order('created_at',{ascending:true});if(error)return $('adminList').innerHTML='<div class="error">'+Portal.esc(error.message)+'</div>';$('adminList').innerHTML=(data||[]).map(a=>`<div class="poll-admin-row"><div><strong>${Portal.esc(a.avatar_emoji||'👤')} ${Portal.esc(a.nickname||a.first_name||a.name||'Администратор')}</strong><div class="meta">${Portal.esc(a.first_name||'')} ${Portal.esc(a.surname||'')} · ${a.id===admin.id?'Вы':''}</div></div>${a.id===admin.id?'':`<button class="btn danger" onclick="removeAdmin('${a.id}')">Снять права</button>`}</div>`).join('')||'<div class="empty">Администраторов нет.</div>'}
 async function removeAdmin(id){if(!confirm('Снять права администратора?'))return;const r=await Portal.db.rpc('set_user_admin',{p_user_id:id,p_is_admin:false});if(r.error)alert(r.error.message);else loadAdmins()}
 $('adminForm').onsubmit=async e=>{e.preventDefault();const email=$('adminEmail').value.trim();const r=await Portal.db.rpc('set_user_admin_by_email',{p_email:email,p_is_admin:true});if(r.error)return Portal.msg($('adminMsg'),r.error.message);e.target.reset();Portal.msg($('adminMsg'),'Права администратора выданы.','success');loadAdmins()};
 
-$('newsForm').onsubmit=async e=>{e.preventDefault();const r=await Portal.db.from('news').insert({title:$('nt').value.trim(),body:$('nb').value.trim(),created_by:admin.id,published:true});if(r.error)return Portal.msg($('nmsg'),r.error.message);e.target.reset();Portal.msg($('nmsg'),'Новость опубликована','success')};
-$('eventForm').onsubmit=async e=>{e.preventDefault();const r=await Portal.db.from('events').insert({title:$('et').value.trim(),event_date:new Date($('ed').value).toISOString(),location:$('el').value.trim(),description:$('eb').value.trim(),created_by:admin.id,published:true});if(r.error)return Portal.msg($('emsg'),r.error.message);e.target.reset();Portal.msg($('emsg'),'Мероприятие опубликовано','success')};
+$('newsForm').onsubmit=async e=>{e.preventDefault();const r=await Portal.db.from('news').insert({title:$('nt').value.trim(),body:$('nb').value.trim(),created_by:admin.id,published:true});if(r.error)return Portal.msg($('nmsg'),r.error.message);e.target.reset();Portal.msg($('nmsg'),'Новость опубликована','success');loadNews()};
+$('eventForm').onsubmit=async e=>{e.preventDefault();const r=await Portal.db.from('events').insert({title:$('et').value.trim(),event_date:new Date($('ed').value).toISOString(),location:$('el').value.trim(),description:$('eb').value.trim(),created_by:admin.id,published:true});if(r.error)return Portal.msg($('emsg'),r.error.message);e.target.reset();Portal.msg($('emsg'),'Мероприятие опубликовано','success');loadEvents()};
 start();
 </script></body></html>

@@ -11,6 +11,7 @@
   </div>
 
 
+  <section class="card" style="margin-top:16px"><h2>🟢 Пользователи онлайн / оффлайн</h2><p class="muted">Этот список виден только администраторам. Онлайн = активность за последние 90 секунд.</p><div id="presenceList" class="list">Загрузка...</div></section>
   <section class="card" style="margin-top:16px"><h2>👥 Администраторы</h2><p class="muted">Введи email зарегистрированного пользователя — он получит права администратора.</p><form id="adminForm" class="form"><input id="adminEmail" type="email" placeholder="email ученика" required><button class="btn primary">Сделать администратором</button></form><div id="adminMsg" class="hidden"></div><div id="adminList" class="list" style="margin-top:14px">Загрузка...</div></section>
   <section class="card" style="margin-top:16px"><h2>🗳 Создать опрос</h2>
     <form id="pollForm" class="form">
@@ -38,11 +39,12 @@ async function start(){
   $('guard').classList.add('hidden');
   $('panel').classList.remove('hidden');
   addOption(); addOption();
-  await Promise.all([loadIdeas(),loadMemes(),loadPolls(),loadAdmins(),loadNews(),loadEvents()]);
+  await Promise.all([loadIdeas(),loadMemes(),loadPolls(),loadAdmins(),loadNews(),loadEvents(),loadPresence()]);
+  setInterval(loadPresence,30000);
 }
 
 async function loadIdeas(){
-  const {data,error}=await Portal.db.from('ideas').select('*,profiles:safe_author(author_name,surname,first_name,class_name)').order('created_at',{ascending:false}).limit(100);
+  const {data,error}=await Portal.db.from('ideas').select('*,profiles:author_id(first_name,surname,class_name,nickname,avatar_emoji)').order('created_at',{ascending:false}).limit(100);
   if(error)return $('ideas').innerHTML='<div class="error">'+Portal.esc(error.message)+'</div>';
   $('ideas').innerHTML=(data||[]).map(i=>`<article class="item"><div class="item-head"><div><h3>${Portal.esc(i.title)}</h3><div class="meta">${Portal.esc(i.author_name||'Ученик')} · ${Portal.esc(i.class_name||'Класс не указан')} · ${Portal.esc(i.category)}</div></div><select onchange="setStatus(${i.id},this.value)"><option value="new" ${i.status==='new'?'selected':''}>Новая</option><option value="in_progress" ${i.status==='in_progress'?'selected':''}>В работе</option><option value="done" ${i.status==='done'?'selected':''}>Выполнено</option><option value="rejected" ${i.status==='rejected'?'selected':''}>Не можем</option></select></div><p>${Portal.esc(i.description)}</p><div class="meta">Создано: ${Portal.fmt(i.created_at)}</div><div class="admin-actions"><button class="btn danger" onclick="deleteIdea(${i.id})">🗑 Удалить</button></div></article>`).join('')||'<div class="empty">Идей нет.</div>';
 }
@@ -111,6 +113,13 @@ async function deleteNews(id){if(!confirm('Удалить эту новость?
 
 async function loadEvents(){const {data,error}=await Portal.db.from('events').select('*').order('event_date',{ascending:true}).limit(50);if(error)return $('eventsList').innerHTML='<div class="error">'+Portal.esc(error.message)+'</div>';$('eventsList').innerHTML=(data||[]).map(e=>`<div class="poll-admin-row"><div><strong>${Portal.esc(e.title)}</strong><div class="meta">${Portal.fmt(e.event_date)}${e.location?' · '+Portal.esc(e.location):''} · ${e.published?'Опубликовано':'Скрыто'}</div></div><button class="btn danger" onclick="deleteEvent('${e.id}')">🗑 Удалить</button></div>`).join('')||'<div class="empty">Мероприятий пока нет.</div>'}
 async function deleteEvent(id){if(!confirm('Удалить это мероприятие?'))return;const r=await Portal.db.from('events').delete().eq('id',id);if(r.error)alert(r.error.message);else loadEvents()}
+
+async function loadPresence(){
+  const {data,error}=await Portal.db.from('profiles').select('id,first_name,surname,class_name,nickname,avatar_emoji,role,created_at,user_presence(last_seen)').order('created_at',{ascending:true});
+  if(error)return $('presenceList').innerHTML='<div class="error">'+Portal.esc(error.message)+'</div>';
+  const now=Date.now(), cutoff=90000;
+  $('presenceList').innerHTML=(data||[]).map(p=>{const last=p.user_presence?.[0]?.last_seen;const online=last && now-new Date(last).getTime()<=cutoff;const nick=p.nickname||p.first_name||'Ученик';const badge=p.role==='admin'?' <span class="badge admin">Админ</span>':'';return `<div class="poll-admin-row"><div><strong>${Portal.esc(p.avatar_emoji||'👤')} ${Portal.esc(nick)}${badge}</strong><div class="meta">${online?'🟢 Онлайн':'⚪ Оффлайн'}${last?' · был(а) в сети '+Portal.fmt(last):''} · ${Portal.esc(p.class_name||'Класс не указан')}</div></div></div>`}).join('')||'<div class="empty">Пользователей пока нет.</div>';
+}
 
 async function loadAdmins(){const {data,error}=await Portal.db.from('profiles').select('id,first_name,surname,nickname,avatar_emoji,role').eq('role','admin').order('created_at',{ascending:true});if(error)return $('adminList').innerHTML='<div class="error">'+Portal.esc(error.message)+'</div>';$('adminList').innerHTML=(data||[]).map(a=>`<div class="poll-admin-row"><div><strong>${Portal.esc(a.avatar_emoji||'👤')} ${Portal.esc(a.nickname||a.first_name||a.name||'Администратор')}</strong><div class="meta">${Portal.esc(a.first_name||'')} ${Portal.esc(a.surname||'')} · ${a.id===admin.id?'Вы':''}</div></div>${a.id===admin.id?'':`<button class="btn danger" onclick="removeAdmin('${a.id}')">Снять права</button>`}</div>`).join('')||'<div class="empty">Администраторов нет.</div>'}
 async function removeAdmin(id){if(!confirm('Снять права администратора?'))return;const r=await Portal.db.rpc('set_user_admin',{p_user_id:id,p_is_admin:false});if(r.error)alert(r.error.message);else loadAdmins()}

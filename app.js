@@ -3,6 +3,9 @@ const db = createClient(window.SUPABASE_URL, window.SUPABASE_PUBLISHABLE_KEY);
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 const fmt = d => new Intl.DateTimeFormat('ru-RU',{dateStyle:'medium',timeStyle:'short'}).format(new Date(d));
+const MAIN_ADMIN_ID = '4a098f87-b2c0-4aa2-9333-a3e2e4afb44e';
+const nickHtml = (name,id) => `<span class="${id===MAIN_ADMIN_ID?'main-admin-nick':''}">${esc(name)}</span>`;
+
 const statusInfo = {
   new:['Новая','new'], in_progress:['В работе','work'], done:['Выполнено','done'], rejected:['Не можем','rejected']
 };
@@ -19,7 +22,7 @@ async function bootNav(){
     if(u){
       const displayName = p?.nickname || p?.first_name || p?.name || 'Ученик';
       const avatar = p?.avatar_emoji || '👤';
-      el.innerHTML=`<div class="auth-actions"><a class="auth-user" href="profile.html">${esc(avatar)} <span>${esc(displayName)}</span></a><button class="btn logout-btn" id="logout">Выйти</button></div>`;
+      el.innerHTML=`<div class="auth-actions"><a class="auth-user" href="profile.html">${esc(avatar)} ${nickHtml(displayName,p?.id)}</a><button class="btn logout-btn" id="logout">Выйти</button></div>`;
     } else {
       el.innerHTML=`<a class="btn primary login-btn" href="auth.html">Войти</a>`;
     }
@@ -34,4 +37,4 @@ heartbeat();
 setInterval(heartbeat,30000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')heartbeat()});
 
-window.Portal = {db,esc,fmt,statusInfo,user,profile,msg,hide};
+window.Portal = {db,esc,fmt,statusInfo,user,profile,msg,hide,MAIN_ADMIN_ID,nickHtml};

@@ -1,11 +1,34 @@
 const { createClient } = supabase;
+
+// Единый ключ авторизации для всех версий портала. Старые ключи переносим,
+// чтобы обновление сайта/ZIP не выбрасывало уже вошедших пользователей.
+const AUTH_STORAGE_KEY = 'school70-supabase-auth';
+const LEGACY_AUTH_KEYS = [
+  'school70-v18',
+  'school70-v19',
+  'school70-v20',
+  'school70-auth'
+];
+try {
+  if (!localStorage.getItem(AUTH_STORAGE_KEY)) {
+    for (const key of LEGACY_AUTH_KEYS) {
+      const value = localStorage.getItem(key);
+      if (value) {
+        localStorage.setItem(AUTH_STORAGE_KEY, value);
+        break;
+      }
+    }
+  }
+} catch (_) {}
+
 const db = createClient(window.SUPABASE_URL, window.SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
     storage: window.localStorage,
-    storageKey: 'school70-v18'
+    storageKey: AUTH_STORAGE_KEY,
+    flowType: 'pkce'
   }
 });
 

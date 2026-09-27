@@ -3,8 +3,8 @@
 <div id="notice" class="hidden"></div>
 <form id="form" class="form">
 <div id="signup-fields"><label>Фамилия</label><input id="surname" required><label>Имя</label><input id="first_name" required><label>Класс</label><input id="class_name" placeholder="10А" required><label>Никнейм <span class="muted">(необязательно)</span></label><input id="nickname" maxlength="30" placeholder="Например: Матвей_70"></div>
-<label>Email</label><input id="email" type="email" required autocomplete="email"><label>Пароль</label><input id="password" type="password" minlength="6" required autocomplete="new-password">
-<button class="btn primary" id="submit">Зарегистрироваться</button></form>
+<label>Email</label><input id="email" type="email" required autocomplete="email"><label>Пароль</label><div class="password-wrap"><input id="password" type="password" minlength="6" required autocomplete="new-password"><button type="button" class="password-eye" id="password-eye" aria-label="Показать пароль" aria-pressed="false">👁️</button></div>
+<button type="submit" class="btn primary" id="submit">Зарегистрироваться</button></form>
 <button class="btn" id="toggle" style="margin-top:10px;width:100%">Уже есть аккаунт? Войти</button>
 <p class="muted" style="font-size:13px;margin-top:16px">Имя и класс используются администрацией для обработки заявок. Другим ученикам они не показываются.</p>
 </div></main>
@@ -20,6 +20,8 @@ const submit=document.getElementById('submit');
 const toggle=document.getElementById('toggle');
 const emailEl=document.getElementById('email');
 const passwordEl=document.getElementById('password');
+const passwordEye=document.getElementById('password-eye');
+f.noValidate=true;
 
 function setMode(){
   title.textContent=signup?'Создать аккаунт':'Войти';
@@ -31,9 +33,17 @@ function setMode(){
   hide(note);
 }
 
-toggle.onclick=()=>{signup=!signup;setMode()};
+toggle.type='button';
+toggle.addEventListener('click',()=>{signup=!signup;setMode()});
+passwordEye.addEventListener('click',()=>{
+  const visible=passwordEl.type==='text';
+  passwordEl.type=visible?'password':'text';
+  passwordEye.textContent=visible?'👁️':'🙈';
+  passwordEye.setAttribute('aria-label',visible?'Показать пароль':'Скрыть пароль');
+  passwordEye.setAttribute('aria-pressed',String(!visible));
+});
 
-f.onsubmit=async e=>{
+f.addEventListener('submit',async e=>{
   e.preventDefault();
   hide(note);
   submit.disabled=true;
@@ -72,6 +82,6 @@ f.onsubmit=async e=>{
     submit.disabled=false;
     submit.textContent=signup?'Зарегистрироваться':'Войти';
   }
-};
+});
 setMode();
 </script></body></html>

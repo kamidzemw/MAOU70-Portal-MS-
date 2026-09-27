@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Админка — Банк идей</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html"><span class="brand-mark">👑</span><span>АДМИНКА</span></a>
+    <nav class="nav"><a href="index.html">← На сайт</a><button id="logoutBtn" class="btn btn-ghost">Выйти</button></nav>
+  </header>
+  <main class="admin-main">
+    <div id="adminGuard" class="loading">Проверяем доступ…</div>
+    <div id="adminApp" class="hidden">
+      <section class="section admin-head"><div><div class="eyebrow">УПРАВЛЕНИЕ</div><h1>Банк идей</h1><p class="muted">Здесь можно менять статус, комментарий, текст и удалять идеи.</p></div></section>
+      <section class="admin-stats">
+        <div><b id="statAll">—</b><span>всего идей</span></div><div><b id="statVotes">—</b><span>голосов</span></div><div><b id="statProgress">—</b><span>в работе</span></div><div><b id="statDone">—</b><span>выполнено</span></div>
+      </section>
+      <section class="admin-list"><div class="admin-toolbar"><h2>Идеи</h2><select id="adminFilter"><option value="all">Все статусы</option><option value="new">Новые</option><option value="in_progress">В работе</option><option value="done">Выполнено</option><option value="rejected">Отклонено</option></select></div><div id="adminIdeas"></div></section>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

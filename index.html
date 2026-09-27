@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Банк идей — School Ideas</title>
+  <meta name="description" content="Банк идей школьников: предлагай, голосуй, следи за изменениями." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html"><span class="brand-mark">💡</span><span>БАНК ИДЕЙ</span></a>
+    <nav class="nav">
+      <a href="#ideas">Все идеи</a>
+      <a href="#how">Как это работает</a>
+      <button id="authBtn" class="btn btn-ghost">Войти</button>
+      <a id="adminLink" class="btn btn-dark hidden" href="admin.html">Админка</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow">ТВОЯ ИДЕЯ → ИЗМЕНЕНИЯ В ШКОЛЕ</div>
+        <h1>Не просто предложи.<br><span>Сделай так, чтобы тебя услышали.</span></h1>
+        <p>Предлагай идеи, голосуй за предложения других и следи, что уже обсуждается, делается или выполнено.</p>
+        <div class="hero-actions">
+          <button id="heroAddBtn" class="btn btn-primary">💡 Предложить идею</button>
+          <a href="#ideas" class="btn btn-secondary">Смотреть идеи ↓</a>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="hero-card-top"><span>Сейчас в банке</span><span class="live-dot">● LIVE</span></div>
+        <div class="hero-stat"><strong id="heroIdeas">—</strong><span>идей</span></div>
+        <div class="mini-stats">
+          <div><b id="heroVotes">—</b><span>голосов</span></div>
+          <div><b id="heroProgress">—</b><span>в работе</span></div>
+          <div><b id="heroDone">—</b><span>выполнено</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="ideas" class="section">
+      <div class="section-head">
+        <div><div class="eyebrow">ОТКРЫТО ДЛЯ ВСЕХ</div><h2>Идеи школы</h2></div>
+        <div class="filters">
+          <button class="filter active" data-filter="all">Все</button>
+          <button class="filter" data-filter="new">Новые</button>
+          <button class="filter" data-filter="in_progress">В работе</button>
+          <button class="filter" data-filter="done">Выполнено</button>
+        </div>
+      </div>
+      <div id="ideasGrid" class="ideas-grid"><div class="loading">Загружаем идеи…</div></div>
+    </section>
+
+    <section id="how" class="section how-section">
+      <div class="section-head"><div><div class="eyebrow">ПРОСТО</div><h2>Как это работает</h2></div></div>
+      <div class="steps">
+        <article><span>01</span><h3>Предложи</h3><p>Напиши, что можно изменить или добавить в школе.</p></article>
+        <article><span>02</span><h3>Голосуй</h3><p>Поддерживай идеи, которые считаешь полезными.</p></article>
+        <article><span>03</span><h3>Следи</h3><p>Статус идеи меняется по мере работы над ней.</p></article>
+      </div>
+    </section>
+  </main>
+
+  <footer><span>School Ideas</span><span>Банк идей школьников</span></footer>
+
+  <div id="authModal" class="modal hidden"><div class="modal-box">
+    <button class="modal-close" data-close="authModal">×</button>
+    <div class="eyebrow">АККАУНТ</div><h2 id="authTitle">Войти</h2>
+    <p class="muted" id="authSubtitle">Чтобы предлагать идеи и голосовать.</p>
+    <form id="authForm">
+      <label id="nameField" class="hidden">Имя<input id="nameInput" type="text" placeholder="Например, Матвей" /></label>
+      <label>Email<input id="emailInput" type="email" required placeholder="you@example.com" /></label>
+      <label>Пароль<input id="passwordInput" type="password" required minlength="6" placeholder="Минимум 6 символов" /></label>
+      <button class="btn btn-primary full" type="submit" id="authSubmit">Войти</button>
+    </form>
+    <button class="switch-auth" id="switchAuth">Нет аккаунта? Зарегистрироваться</button>
+    <div id="authMessage" class="form-message"></div>
+  </div></div>
+
+  <div id="ideaModal" class="modal hidden"><div class="modal-box">
+    <button class="modal-close" data-close="ideaModal">×</button>
+    <div class="eyebrow">НОВАЯ ИДЕЯ</div><h2>Предложить идею</h2>
+    <form id="ideaForm">
+      <label>Название<input id="ideaTitle" type="text" maxlength="120" required placeholder="Например, музыка на переменах" /></label>
+      <label>Описание<textarea id="ideaDescription" maxlength="1200" required placeholder="Что именно ты предлагаешь и зачем?"></textarea></label>
+      <label>Категория<select id="ideaCategory"><option>Школа</option><option>Мероприятия</option><option>Отдых</option><option>Учёба</option><option>Спорт</option><option>Другое</option></select></label>
+      <button class="btn btn-primary full" type="submit">Опубликовать идею</button>
+    </form>
+    <div id="ideaMessage" class="form-message"></div>
+  </div></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+</body>
+</html>

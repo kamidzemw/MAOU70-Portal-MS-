@@ -1,7 +1,7 @@
-const CACHE='school-portal-v17-auth-users';
+const CACHE='school-portal-v20-ideas';
 const CORE=['./','./index.html','./styles.css','./app.js','./supabase-config.js','./manifest.webmanifest','./icon.svg'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())));
-self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('school-portal-')&&k!=='school-portal-v17-auth-users').map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
+self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('school-portal-')&&k!=='school-portal-v20-ideas').map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{
   const u=new URL(e.request.url);
   if(u.origin===location.origin){

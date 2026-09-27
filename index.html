@@ -1,99 +1,25 @@
-<!doctype html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Банк идей — School Ideas</title>
-  <meta name="description" content="Банк идей школьников: предлагай, голосуй, следи за изменениями." />
-  <link rel="stylesheet" href="style.css?v=green3" />
-</head>
-<body>
-  <header class="topbar">
-    <a class="brand" href="index.html"><span class="brand-mark">💡</span><span class="brand-text"><b>БАНК ИДЕЙ</b><small>МАОУ СОШ №70</small></span></a>
-    <nav class="nav">
-      <a href="#ideas">Все идеи</a>
-      <a href="#how">Как это работает</a>
-      <button id="authBtn" class="btn btn-ghost">Войти</button>
-      <a id="adminLink" class="btn btn-dark hidden" href="admin.html">Админка</a>
-    </nav>
-  </header>
-
-  <main>
-    <section class="hero">
-      <div class="hero-copy">
-        <div class="school-chip"><span class="school-chip-icon">🏫</span><span><b>МАОУ СОШ №70</b><small>Школьный банк идей</small></span></div>
-        <div class="eyebrow">ТВОЯ ИДЕЯ → ИЗМЕНЕНИЯ В ШКОЛЕ</div>
-        <h1>Не просто предложи.<br><span>Сделай так, чтобы тебя услышали.</span></h1>
-        <p>Предлагай идеи, голосуй за предложения других и следи, что уже обсуждается, делается или выполнено.</p>
-        <div class="hero-actions">
-          <button id="heroAddBtn" class="btn btn-primary">💡 Предложить идею</button>
-          <a href="#ideas" class="btn btn-secondary">Смотреть идеи ↓</a>
-        </div>
-      </div>
-      <div class="hero-card">
-        <div class="hero-card-top"><span>Сейчас в банке</span><span class="live-dot">● LIVE</span></div>
-        <div class="admin-profile"><div class="admin-avatar">М</div><div><span class="admin-label">АДМИНИСТРАТОР САЙТА</span><strong>Председатель Совета Первых<br>Савосин Матвей Алексеевич</strong></div></div>
-        <div class="hero-stat"><strong id="heroIdeas">—</strong><span>идей</span></div>
-        <div class="mini-stats">
-          <div><b id="heroVotes">—</b><span>голосов</span></div>
-          <div><b id="heroProgress">—</b><span>в работе</span></div>
-          <div><b id="heroDone">—</b><span>выполнено</span></div>
-        </div>
-      </div>
-    </section>
-
-    <section id="ideas" class="section">
-      <div class="section-head">
-        <div><div class="eyebrow">ОТКРЫТО ДЛЯ ВСЕХ</div><h2>Идеи школы</h2></div>
-        <div class="filters">
-          <button class="filter active" data-filter="all">Все</button>
-          <button class="filter" data-filter="new">Новые</button>
-          <button class="filter" data-filter="in_progress">В работе</button>
-          <button class="filter" data-filter="done">Выполнено</button>
-        </div>
-      </div>
-      <div id="ideasGrid" class="ideas-grid"><div class="loading">Загружаем идеи…</div></div>
-    </section>
-
-    <section id="how" class="section how-section">
-      <div class="section-head"><div><div class="eyebrow">ПРОСТО</div><h2>Как это работает</h2></div></div>
-      <div class="steps">
-        <article><span>01</span><h3>Предложи</h3><p>Напиши, что можно изменить или добавить в школе.</p></article>
-        <article><span>02</span><h3>Голосуй</h3><p>Поддерживай идеи, которые считаешь полезными.</p></article>
-        <article><span>03</span><h3>Следи</h3><p>Статус идеи меняется по мере работы над ней.</p></article>
-      </div>
-    </section>
-  </main>
-
-  <footer><div><b>БАНК ИДЕЙ · МАОУ СОШ №70</b><span>Банк идей школьников</span></div><div class="footer-admin">Администратор сайта: <b>Савосин Матвей Алексеевич</b></div></footer>
-
-  <div id="authModal" class="modal hidden"><div class="modal-box">
-    <button class="modal-close" data-close="authModal">×</button>
-    <div class="eyebrow">АККАУНТ</div><h2 id="authTitle">Войти</h2>
-    <p class="muted" id="authSubtitle">Чтобы предлагать идеи и голосовать.</p>
-    <form id="authForm">
-      <label id="nameField" class="hidden">Имя<input id="nameInput" type="text" placeholder="Например, Матвей" /></label>
-      <label>Email<input id="emailInput" type="email" required placeholder="you@example.com" /></label>
-      <label>Пароль<input id="passwordInput" type="password" required minlength="6" placeholder="Минимум 6 символов" /></label>
-      <button class="btn btn-primary full" type="submit" id="authSubmit">Войти</button>
-    </form>
-    <button class="switch-auth" id="switchAuth">Нет аккаунта? Зарегистрироваться</button>
-    <div id="authMessage" class="form-message"></div>
-  </div></div>
-
-  <div id="ideaModal" class="modal hidden"><div class="modal-box">
-    <button class="modal-close" data-close="ideaModal">×</button>
-    <div class="eyebrow">НОВАЯ ИДЕЯ</div><h2>Предложить идею</h2>
-    <form id="ideaForm">
-      <label>Название<input id="ideaTitle" type="text" maxlength="120" required placeholder="Например, музыка на переменах" /></label>
-      <label>Описание<textarea id="ideaDescription" maxlength="1200" required placeholder="Что именно ты предлагаешь и зачем?"></textarea></label>
-      <label>Категория<select id="ideaCategory"><option>Мероприятия</option><option>Отдых</option><option>Учёба</option><option>Спорт</option><option>Другое</option></select></label>
-      <button class="btn btn-primary full" type="submit">Опубликовать идею</button>
-    </form>
-    <div id="ideaMessage" class="form-message"></div>
-  </div></div>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js?v=green3"></script>
-</body>
-</html>
+<!doctype html><html lang="ru"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#19d27c"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg">
+<title>Школьный портал — МАОУ СОШ №70</title><link rel="stylesheet" href="styles.css">
+</head><body><header class="topbar"><div class="wrap topbar-inner">
+<a class="brand" href="index.html"><span class="logo">🏫</span><span>МАОУ СОШ №70</span></a>
+<nav class="nav"><a href="ideas.html">💡 Идеи</a><a href="memes.html">😂 Мемы</a><a href="events.html">📅 События</a><a href="polls.html">🗳 Опросы</a><a href="news.html">📢 Новости</a></nav>
+<div data-auth></div></div></header>
+<main class="wrap hero"><div class="kicker">Цифровая школьная среда</div>
+<h1>ШКОЛЬНЫЙ<br><span>ПОРТАЛ</span></h1>
+<p>Всё, что происходит в школьной жизни, — в одном месте. Предлагай идеи, смотри мемы, следи за мероприятиями, участвуй в опросах и узнавай новости.</p>
+<div class="staff-chips">
+<div class="staff-chip"><div class="person-icon">🛡️</div><div><small>Администратор сайта</small><strong>Председатель Совета Первых · Савосин Матвей Алексеевич</strong></div></div>
+<div class="staff-chip"><div class="person-icon">🏫</div><div><small>Директор школы</small><strong>Климцева Ирина Анатольевна</strong></div></div>
+</div>
+<section class="grid" style="margin-top:30px">
+<a class="portal-card ideas" href="ideas.html"><div class="accent"></div><div class="icon">💡</div><h2>Банк идей</h2><p>Предлагай изменения, голосуй и следи за тем, что происходит с идеями.</p><div class="arrow">→</div></a>
+<a class="portal-card memes" href="memes.html"><div class="accent"></div><div class="icon">😂</div><h2>Школьные мемы</h2><p>Мемы учеников с обязательной модерацией перед публикацией.</p><div class="arrow">→</div></a>
+<a class="portal-card events" href="events.html"><div class="accent"></div><div class="icon">📅</div><h2>Мероприятия</h2><p>События школы, даты, места и важные объявления о мероприятиях.</p><div class="arrow">→</div></a>
+<a class="portal-card polls" href="polls.html"><div class="accent"></div><div class="icon">🗳️</div><h2>Опросы</h2><p>Опросы школы и Совета Первых с защитой от повторного голосования.</p><div class="arrow">→</div></a>
+<a class="portal-card news" href="news.html"><div class="accent"></div><div class="icon">📢</div><h2>Новости</h2><p>Новости и важная информация от администрации портала.</p><div class="arrow">→</div></a>
+<a class="portal-card rules" href="rules.html"><div class="accent"></div><div class="icon">📜</div><h2>Правила</h2><p>Что можно публиковать, как работает модерация и почему идея может быть отклонена.</p><div class="arrow">→</div></a>
+</section></main><footer class="footer wrap">МАОУ СОШ №70 · Школьный портал</footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="app.js"></script>
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');</script></body></html>

@@ -1,25 +1,38 @@
-# School Ideas — Банк идей
+# Школьный портал МАОУ СОШ №70
 
-Статический сайт для GitHub Pages + Supabase.
+PWA-портал на GitHub Pages + Supabase.
 
-## Файлы
-- `index.html` — публичная часть
-- `admin.html` — админ-панель
-- `style.css` — дизайн
-- `app.js` — авторизация, идеи и голосование
-- `admin.js` — управление идеями
+Разделы:
+- 💡 Банк идей
+- 😂 Школьные мемы
+- 📅 Мероприятия
+- 🗳️ Опросы
+- 📢 Новости
+- 🔐 Регистрация и админ-панель
 
-## Supabase
-В коде используются:
-- Project URL: https://xshennhqddkslbunummb.supabase.co
-- Publishable key: из Settings → API → Publishable key
+## 1. Supabase
+1. Откройте Supabase → SQL Editor.
+2. Выполните `supabase.sql` целиком.
+3. В `supabase-config.js` уже указаны URL проекта и publishable key.
+4. Никогда не добавляйте Secret/Service Role key в этот проект.
 
-Secret key в браузер не добавляется.
+## 2. GitHub Pages
+Загрузите все файлы в корень репозитория и включите:
+Settings → Pages → Deploy from branch → main → / (root).
 
-## GitHub Pages
-1. Создать репозиторий.
-2. Загрузить все файлы в корень репозитория.
-3. Settings → Pages → Deploy from a branch → main / root.
-4. Открыть выданный GitHub Pages URL.
+## 3. Первый администратор
+Зарегистрируйтесь через сайт, затем в Supabase SQL Editor выполните:
 
-Для OAuth/редиректов, если они понадобятся позже, добавить домен GitHub Pages в Supabase Authentication → URL Configuration.
+UPDATE public.profiles
+SET role = 'admin'
+WHERE id = (SELECT id FROM auth.users WHERE email = 'ВАША_ПОЧТА');
+
+После этого обновите страницу.
+
+## 4. PWA
+На телефоне откройте GitHub Pages → меню браузера → «Добавить на главный экран».
+Для Android браузер может показать «Установить приложение».
+
+## Архитектура
+GitHub Pages раздаёт интерфейс. Supabase хранит пользователей и данные.
+Вся защита критичных операций находится в RLS/SQL, а не только в JavaScript.

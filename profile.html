@@ -1,0 +1,5 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Профиль</title><link rel="stylesheet" href="styles.css"></head><body>
+<main class="wrap page"><div class="page-head"><div><a class="muted" href="index.html">← Портал</a><h1>Профиль</h1></div></div><div class="card" id="box">Загрузка...</div></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="app.js"></script><script>
+(async()=>{const u=await Portal.user(),p=await Portal.profile();if(!u)return location.href='auth.html';box.innerHTML=`<h2>${Portal.esc((p?.first_name||'Ученик')+' '+(p?.surname||''))}</h2><p class="muted">Класс: ${Portal.esc(p?.class_name||'—')}</p><p class="muted">Email: ${Portal.esc(u.email||'')}</p>${p?.role==='admin'?'<div class="success">Вы администратор портала. <a href="admin.html"><u>Открыть админ-панель →</u></a></div>':''}`})();
+</script></body></html>

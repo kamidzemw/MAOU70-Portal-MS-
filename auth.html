@@ -1,0 +1,18 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Регистрация — Школа №70</title><link rel="stylesheet" href="styles.css"></head><body>
+<main class="wrap auth"><a href="index.html" class="muted">← На главную</a><div class="card" style="margin-top:15px"><div class="kicker">МАОУ СОШ №70</div><h1 id="title">Создать аккаунт</h1>
+<div id="notice" class="hidden"></div>
+<form id="form" class="form">
+<div id="signup-fields"><label>Фамилия</label><input id="surname" required><label>Имя</label><input id="first_name" required><label>Класс</label><input id="class_name" placeholder="10А" required></div>
+<label>Email</label><input id="email" type="email" required autocomplete="email"><label>Пароль</label><input id="password" type="password" minlength="6" required autocomplete="new-password">
+<button class="btn primary" id="submit">Зарегистрироваться</button></form>
+<button class="btn" id="toggle" style="margin-top:10px;width:100%">Уже есть аккаунт? Войти</button>
+<p class="muted" style="font-size:13px;margin-top:16px">Имя и класс используются администрацией для обработки заявок. Другим ученикам они не показываются.</p>
+</div></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="app.js"></script>
+<script>
+let signup=true; const f=document.getElementById('form'), note=document.getElementById('notice');
+document.getElementById('toggle').onclick=()=>{signup=!signup;document.getElementById('title').textContent=signup?'Создать аккаунт':'Войти';document.getElementById('submit').textContent=signup?'Зарегистрироваться':'Войти';document.getElementById('signup-fields').classList.toggle('hidden',!signup);document.getElementById('toggle').textContent=signup?'Уже есть аккаунт? Войти':'Нет аккаунта? Зарегистрироваться'};
+f.onsubmit=async e=>{e.preventDefault();hide(note);const email=document.getElementById('email').value.trim(),password=document.getElementById('password').value;
+if(signup){const metadata={surname:surname.value.trim(),first_name:first_name.value.trim(),class_name:class_name.value.trim(),name:first_name.value.trim()+' '+surname.value.trim()};const {data,error}=await Portal.db.auth.signUp({email,password,options:{data:metadata}});if(error)return msg(note,error.message);if(data.session)location.href='index.html';else msg(note,'Аккаунт создан. Если включено подтверждение email, подтвердите почту и затем войдите.','success')}
+else{const {error}=await Portal.db.auth.signInWithPassword({email,password});if(error)return msg(note,error.message);location.href='index.html'}};
+</script></body></html>

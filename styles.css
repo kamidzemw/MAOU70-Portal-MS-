@@ -120,3 +120,12 @@ textarea{min-height:120px;resize:vertical}
 .badge.admin{background:rgba(168,120,255,.16);color:#c7b2ff;margin-left:6px;padding:3px 7px}
 
 .main-admin-nick{color:#7ff2c5 !important;text-shadow:0 0 12px rgba(127,242,197,.28);font-weight:800}
+
+.admin-home-panel{margin-top:18px}
+.admin-home-card{position:relative;display:flex;align-items:center;gap:16px;padding:20px 22px;border:1px solid rgba(25,210,124,.28);border-radius:22px;background:linear-gradient(135deg,rgba(25,210,124,.10),rgba(128,104,255,.08));box-shadow:0 16px 50px rgba(0,0,0,.16);color:#fff;overflow:hidden}
+.admin-home-card:hover{border-color:rgba(127,242,197,.55);transform:translateY(-2px)}
+.admin-home-icon{width:52px;height:52px;flex:0 0 52px;border-radius:16px;display:grid;place-items:center;background:rgba(25,210,124,.13);font-size:28px}
+.admin-home-kicker{font-size:11px;color:#7ff2c5;font-weight:900;text-transform:uppercase;letter-spacing:.08em}
+.admin-home-card h2{margin:4px 0 5px;font-size:22px}.admin-home-card p{margin:0;color:var(--muted);line-height:1.4}
+.admin-home-arrow{margin-left:auto;font-size:28px;color:#7ff2c5}
+@media(max-width:520px){.admin-home-card{align-items:flex-start;padding:17px}.admin-home-arrow{display:none}}

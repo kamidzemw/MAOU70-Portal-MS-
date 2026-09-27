@@ -1,7 +1,7 @@
-const CACHE='school-portal-v7-users1';
+const CACHE='school-portal-v8-admin-home1';
 const CORE=['./','./index.html','./styles.css','./app.js','./supabase-config.js','./manifest.webmanifest','./icon.svg'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())));
-self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('school-portal-')&&k!=='school-portal-v7-users1').map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
+self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('school-portal-')&&k!=='school-portal-v8-admin-home1').map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{
   const u=new URL(e.request.url);
   if(u.origin===location.origin){

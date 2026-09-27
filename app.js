@@ -32,7 +32,7 @@ async function bootNav(){
 }
 bootNav();
 
-async function heartbeat(){const u=await user();if(!u)return;await db.from('user_presence').upsert({user_id:u.id,last_seen:new Date().toISOString()},{onConflict:'user_id'});}
+async function heartbeat(){const u=await user();if(!u)return;await db.rpc('touch_presence');}
 heartbeat();
 setInterval(heartbeat,30000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')heartbeat()});

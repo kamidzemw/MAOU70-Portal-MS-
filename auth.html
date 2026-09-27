@@ -10,9 +10,68 @@
 </div></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="app.js"></script>
 <script>
-let signup=true; const f=document.getElementById('form'), note=document.getElementById('notice');
-const signupFields=document.getElementById('signup-fields');const signupInputs=[...signupFields.querySelectorAll('input')];document.getElementById('toggle').onclick=()=>{signup=!signup;document.getElementById('title').textContent=signup?'Создать аккаунт':'Войти';document.getElementById('submit').textContent=signup?'Зарегистрироваться':'Войти';signupFields.classList.toggle('hidden',!signup);signupInputs.forEach(input=>input.required=signup);document.getElementById('toggle').textContent=signup?'Уже есть аккаунт? Войти':'Нет аккаунта? Зарегистрироваться'};
-f.onsubmit=async e=>{e.preventDefault();hide(note);const email=document.getElementById('email').value.trim(),password=document.getElementById('password').value;
-if(signup){const metadata={surname:surname.value.trim(),first_name:first_name.value.trim(),class_name:class_name.value.trim(),nickname:nickname.value.trim(),avatar_emoji:'👤',name:first_name.value.trim()+' '+surname.value.trim()};const {data,error}=await Portal.db.auth.signUp({email,password,options:{data:metadata}});if(error)return msg(note,error.message);if(data.session)location.href='index.html';else msg(note,'Аккаунт создан. Если включено подтверждение email, подтвердите почту и затем войдите.','success')}
-else{const {error}=await Portal.db.auth.signInWithPassword({email,password});if(error)return msg(note,error.message);location.href='index.html'}};
+let signup=true;
+const f=document.getElementById('form');
+const note=document.getElementById('notice');
+const signupFields=document.getElementById('signup-fields');
+const signupInputs=[...signupFields.querySelectorAll('input')];
+const title=document.getElementById('title');
+const submit=document.getElementById('submit');
+const toggle=document.getElementById('toggle');
+const emailEl=document.getElementById('email');
+const passwordEl=document.getElementById('password');
+
+function setMode(){
+  title.textContent=signup?'Создать аккаунт':'Войти';
+  submit.textContent=signup?'Зарегистрироваться':'Войти';
+  signupFields.classList.toggle('hidden',!signup);
+  signupInputs.forEach(input=>input.required=signup);
+  passwordEl.autocomplete=signup?'new-password':'current-password';
+  toggle.textContent=signup?'Уже есть аккаунт? Войти':'Нет аккаунта? Зарегистрироваться';
+  hide(note);
+}
+
+toggle.onclick=()=>{signup=!signup;setMode()};
+
+f.onsubmit=async e=>{
+  e.preventDefault();
+  hide(note);
+  submit.disabled=true;
+  submit.textContent=signup?'Создание аккаунта…':'Вход…';
+  try{
+    if(!window.Portal?.db) throw new Error('Сайт не загрузил модуль Supabase. Обнови страницу (Ctrl+Shift+R).');
+    const email=emailEl.value.trim();
+    const password=passwordEl.value;
+    if(!email||!password) throw new Error('Введи email и пароль.');
+    if(signup){
+      const metadata={
+        surname:document.getElementById('surname').value.trim(),
+        first_name:document.getElementById('first_name').value.trim(),
+        class_name:document.getElementById('class_name').value.trim(),
+        nickname:document.getElementById('nickname').value.trim(),
+        avatar_emoji:'👤',
+        name:document.getElementById('first_name').value.trim()+' '+document.getElementById('surname').value.trim()
+      };
+      const redirectTo=new URL('index.html',window.location.href).href;
+      const {data,error}=await Portal.db.auth.signUp({email,password,options:{data:metadata,emailRedirectTo:redirectTo}});
+      if(error) throw error;
+      if(data?.session){
+        location.href='index.html';
+      }else{
+        msg(note,'Аккаунт создан. Если в Supabase включено подтверждение email — сначала подтверди почту. Если письмо не приходит, отключи Confirm Email в Supabase или настрой SMTP.','success');
+      }
+    }else{
+      const {data,error}=await Portal.db.auth.signInWithPassword({email,password});
+      if(error) throw error;
+      if(!data?.session) throw new Error('Вход не создал сессию. Возможно, email ещё не подтверждён.');
+      location.href='index.html';
+    }
+  }catch(err){
+    msg(note,err?.message||'Неизвестная ошибка. Открой F12 → Console и пришли красную ошибку.', 'error');
+  }finally{
+    submit.disabled=false;
+    submit.textContent=signup?'Зарегистрироваться':'Войти';
+  }
+};
+setMode();
 </script></body></html>

@@ -130,15 +130,21 @@ async function loadPresence(){
     const last=p.last_seen; const online=!!last && now-new Date(last).getTime()<=cutoff;
     const badge=p.role==='admin'?' <span class="badge admin">Админ</span>':'';
     const real=[p.first_name,p.surname].filter(Boolean).join(' ');
-    return `<div class="poll-admin-row"><div><strong>${Portal.esc(p.avatar_emoji||'👤')} ${Portal.nickHtml(p.nickname||'Ученик',p.id)}${badge}</strong><div class="meta">${online?'🟢 Онлайн':'⚪ Оффлайн'}${last?' · был(а) в сети '+Portal.fmt(last):' · ещё не заходил(а)'} · ${Portal.esc(p.class_name||'Класс не указан')}${real?' · '+Portal.esc(real):''}</div></div></div>`;
+    const canDelete=admin.id===Portal.MAIN_ADMIN_ID || !!admin.can_delete_users;
+    const deleteBtn=canDelete?`<button class="btn danger" type="button" onclick="deleteUser('${p.id}',${JSON.stringify((p.role==='admin'?'администратора':'ученика'))})">🗑 Удалить ${p.role==='admin'?'админа':'ученика'}</button>`:'';
+    return `<div class="poll-admin-row"><div><strong>${Portal.esc(p.avatar_emoji||'👤')} ${Portal.nickHtml(p.nickname||'Ученик',p.id)}${badge}</strong><div class="meta">${online?'🟢 Онлайн':'⚪ Оффлайн'}${last?' · был(а) в сети '+Portal.fmt(last):' · ещё не заходил(а)'} · ${Portal.esc(p.class_name||'Класс не указан')}${real?' · '+Portal.esc(real):''}</div></div>${deleteBtn}</div>`;
   }).join('')||'<div class="empty">Пользователей пока нет.</div>';
 }
+async function deleteUser(id,kind){if(!confirm(`Удалить этого ${kind}? Его аккаунт и связанные данные будут удалены.`))return;if(!confirm('Точно удалить пользователя? Это действие нельзя отменить.'))return;const r=await Portal.db.rpc('delete_user_account',{p_user_id:id});if(r.error)return alert('Не удалось удалить пользователя: '+r.error.message);if(id===admin.id){await Portal.db.auth.signOut();location.href='auth.html';return;}await Promise.all([loadPresence(),loadAdmins()])}
+async function deleteStudent(id){return deleteUser(id,'ученика')}
 async function loadAdmins(){
   const r=await Portal.db.rpc('admin_list_users');
   if(r.error)return $('adminList').innerHTML='<div class="error">'+Portal.esc(r.error.message)+'</div>';
   const data=(r.data||[]).filter(a=>a.role==='admin');
-  $('adminList').innerHTML=data.map(a=>`<div class="poll-admin-row"><div><strong>${Portal.esc(a.avatar_emoji||'👤')} ${Portal.nickHtml(a.nickname||a.first_name||'Администратор',a.id)}</strong><div class="meta">${Portal.esc(a.first_name||'')} ${Portal.esc(a.surname||'')} · ${a.id===admin.id?'Вы':''}</div></div>${a.id===admin.id?'':`<button class="btn danger" onclick="removeAdmin('${a.id}')">Снять права</button>`}</div>`).join('')||'<div class="empty">Администраторов нет.</div>';
+  const isMain=admin.id===Portal.MAIN_ADMIN_ID;
+  $('adminList').innerHTML=data.map(a=>{const canControl=isMain; const perm=canControl?`<label class="switch-row" style="margin:8px 0"><input type="checkbox" ${a.can_delete_users?'checked':''} ${a.id===Portal.MAIN_ADMIN_ID?'disabled':''} onchange="setDeletePermission('${a.id}',this.checked)"><span>Может удалять пользователей</span></label>`:''; const actions=a.id===admin.id?'<span class="badge">Вы</span>':`<button class="btn danger" onclick="removeAdmin('${a.id}')">Снять права</button>`; return `<div class="poll-admin-row"><div><strong>${Portal.esc(a.avatar_emoji||'👤')} ${Portal.nickHtml(a.nickname||a.first_name||'Администратор',a.id)}</strong><div class="meta">${Portal.esc(a.first_name||'')} ${Portal.esc(a.surname||'')} ${a.id===Portal.MAIN_ADMIN_ID?' · Главный администратор':''}</div>${perm}</div><div class="admin-actions">${actions}${isMain?`<button class="btn danger" onclick="deleteUser('${a.id}','администратора')">🗑 Удалить админа</button>`:(admin.can_delete_users?`<button class="btn danger" onclick="deleteUser('${a.id}','администратора')">🗑 Удалить админа</button>`:'')}</div></div>`}).join('')||'<div class="empty">Администраторов нет.</div>';
 }
+async function setDeletePermission(id,value){const r=await Portal.db.rpc('set_user_delete_permission',{p_user_id:id,p_can_delete:value});if(r.error){alert(r.error.message);await loadAdmins()}}
 async function removeAdmin(id){if(!confirm('Снять права администратора?'))return;const r=await Portal.db.rpc('set_user_admin',{p_user_id:id,p_is_admin:false});if(r.error)alert(r.error.message);else loadAdmins()}
 $('adminForm').onsubmit=async e=>{e.preventDefault();const email=$('adminEmail').value.trim();const r=await Portal.db.rpc('set_user_admin_by_email',{p_email:email,p_is_admin:true});if(r.error)return Portal.msg($('adminMsg'),r.error.message);e.target.reset();Portal.msg($('adminMsg'),'Права администратора выданы.','success');loadAdmins()};
 

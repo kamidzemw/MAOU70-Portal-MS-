@@ -1,8 +1,67 @@
 <!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Школьные мемы</title><link rel="stylesheet" href="styles.css"><style>:root{--section-accent:#ff5f8f;--section-glow:rgba(255,95,143,.10)}.page h1,.page .kicker{text-shadow:0 0 28px var(--section-glow)}.page .btn.primary{background:linear-gradient(135deg,var(--section-accent),color-mix(in srgb,var(--section-accent) 65%,#fff))}.page .date{color:var(--section-accent)}</style></head><body>
 <header class="topbar"><div class="wrap topbar-inner"><a class="brand" href="index.html"><span class="logo">😂</span><span>Школьные мемы</span></a><nav class="nav"><a href="ideas.html">💡 Идеи</a><a href="events.html">📅 События</a><a href="polls.html">🗳 Опросы</a><a href="news.html">📢 Новости</a></nav><div data-auth></div></div></header>
 <main class="wrap page"><div class="page-head"><div><a class="muted" href="index.html">← Портал</a><h1>Школьные мемы</h1><p class="muted">Публикация — только после модерации.</p></div></div>
-<div class="two"><section class="card"><div class="grid memes" id="memes">Загрузка...</div></section><aside class="card"><h2>😂 Отправить мем</h2><div id="notice" class="hidden"></div><form id="form" class="form"><label>Подпись</label><textarea id="caption" maxlength="500" placeholder="Что происходит?"></textarea><label>Изображение</label><input id="image" type="file" accept="image/jpeg,image/png,image/webp" required><button class="btn primary">Отправить на модерацию</button></form><p class="muted" style="font-size:12px">Не загружай чужие персональные данные, оскорбления, угрозы или запрещённый контент.</p></aside></div></main>
+<div class="two"><section class="card"><div class="grid memes" id="memes">Загрузка...</div></section><aside class="card"><h2>😂 Отправить мем</h2><div id="notice" class="hidden"></div><form id="form" class="form"><label>Подпись</label><textarea id="caption" maxlength="500" placeholder="Что происходит?"></textarea><label>Фото или видео</label><input id="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/ogg" required><button class="btn primary">Отправить на модерацию</button></form><p class="muted" style="font-size:12px">Не загружай чужие персональные данные, оскорбления, угрозы или запрещённый контент.</p></aside></div></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="app.js"></script><script>
-async function load(){const {data,error}=await Portal.db.from('memes').select('*').eq('status','published').order('created_at',{ascending:false}).limit(60);const ids=[...new Set((data||[]).map(m=>m.author_id).filter(Boolean))];let profiles={};if(ids.length){const r=await Portal.db.from('safe_author').select('id,nickname,avatar_emoji').in('id',ids);(r.data||[]).forEach(p=>profiles[p.id]=p)}if(error)return msg(notice,error.message);memes.innerHTML=(data||[]).map(m=>`<article class="item meme"><img src="${Portal.esc(m.image_url)}" alt="Школьный мем" loading="lazy"><div class="meme-body"><div>${Portal.esc(m.caption||'')}</div><div class="meta">${m.show_author ? `${Portal.esc(profiles[m.author_id]?.avatar_emoji||'👤')} ${Portal.nickHtml(profiles[m.author_id]?.nickname||'Ученик',m.author_id)}` : 'Автор скрыт'} · ${Portal.fmt(m.created_at)}</div></div></article>`).join('')||'<div class="empty">Мемов пока нет.</div>'}
-form.onsubmit=async e=>{e.preventDefault();const u=await Portal.user();if(!u)return location.href='auth.html';hide(notice);const file=image.files[0];if(!file||file.size>5*1024*1024)return msg(notice,'Файл должен быть до 5 МБ.');const ext=(file.name.split('.').pop()||'jpg').toLowerCase(),path=`${u.id}/${crypto.randomUUID()}.${ext}`;const up=await Portal.db.storage.from('memes').upload(path,file,{contentType:file.type,upsert:false});if(up.error)return msg(notice,up.error.message);const {data:pub}=Portal.db.storage.from('memes').getPublicUrl(path);const r=await Portal.db.from('memes').insert({author_id:u.id,caption:caption.value.trim(),image_path:path,image_url:pub.publicUrl,status:'pending'});if(r.error)return msg(notice,r.error.message);e.target.reset();msg(notice,'Мем отправлен на модерацию.','success')};load();
+async function load(){
+  const {data,error}=await Portal.db.from('memes').select('*').eq('status','published').order('created_at',{ascending:false}).limit(60);
+  if(error)return msg(notice,error.message);
+  const rows=data||[];
+  const ids=rows.map(m=>m.id);
+  const authorIds=[...new Set(rows.map(m=>m.author_id).filter(Boolean))];
+  let profiles={}, likes={}, commentsByMeme={};
+  if(authorIds.length){const r=await Portal.db.from('safe_author').select('id,nickname,avatar_emoji').in('id',authorIds);(r.data||[]).forEach(p=>profiles[p.id]=p)}
+  if(ids.length){
+    const [lr,cr]=await Promise.all([
+      Portal.db.from('meme_like_counts').select('meme_id,likes_count').in('meme_id',ids),
+      Portal.db.from('meme_comments').select('id,meme_id,author_id,comment_text,created_at').in('meme_id',ids).order('created_at',{ascending:true})
+    ]);
+    (lr.data||[]).forEach(x=>likes[x.meme_id]=x.likes_count);
+    const commentAuthorIds=[...new Set((cr.data||[]).map(c=>c.author_id).filter(Boolean))];
+    if(commentAuthorIds.length){const r=await Portal.db.from('safe_author').select('id,nickname,avatar_emoji').in('id',commentAuthorIds);(r.data||[]).forEach(p=>profiles[p.id]=p)}
+    (cr.data||[]).forEach(c=>(commentsByMeme[c.meme_id]??=[]).push(c));
+  }
+  const u=await Portal.user();
+  let myLikes=new Set();
+  if(u&&ids.length){const r=await Portal.db.from('meme_likes').select('meme_id').eq('user_id',u.id).in('meme_id',ids);myLikes=new Set((r.data||[]).map(x=>x.meme_id));}
+  memes.innerHTML=rows.map(m=>{
+    const comments=commentsByMeme[m.id]||[];
+    return `<article class="item meme" id="meme-${m.id}"><div class="meme-media">${Portal.mediaHtml(m.image_url,'Школьный мем')}</div><div class="meme-body"><div>${Portal.esc(m.caption||'')}</div><div class="meta">${m.show_author ? `${Portal.esc(profiles[m.author_id]?.avatar_emoji||'👤')} ${Portal.nickHtml(profiles[m.author_id]?.nickname||'Ученик',m.author_id)}` : 'Автор скрыт'} · ${Portal.fmt(m.created_at)}</div><div class="meme-actions"><button class="like-btn ${myLikes.has(m.id)?'liked':''}" data-like="${m.id}" onclick="toggleLike('${m.id}')">${myLikes.has(m.id)?'❤️':'🤍'} <span id="likes-${m.id}">${likes[m.id]||0}</span></button><span class="comment-count">💬 ${comments.length}</span></div><div class="comments" id="comments-${m.id}">${comments.map(c=>commentHtml(c,profiles,u)).join('')}</div>${u?`<form class="comment-form" onsubmit="addComment(event,'${m.id}')"><input maxlength="500" placeholder="Написать комментарий..." required><button class="btn" type="submit">Отправить</button></form>`:`<div class="comment-login">Чтобы комментировать, <a href="auth.html">войдите в аккаунт</a>.</div>`}</div></article>`
+  }).join('')||'<div class="empty">Мемов пока нет.</div>';
+}
+
+function commentHtml(c,profiles,u){const p=profiles[c.author_id]||{};return `<div class="comment" id="comment-${c.id}"><div class="comment-avatar">${Portal.esc(p.avatar_emoji||'👤')}</div><div class="comment-main"><div class="comment-head"><strong>${Portal.nickHtml(p.nickname||'Ученик',c.author_id)}</strong><span>${Portal.fmt(c.created_at)}</span></div><div class="comment-text">${Portal.esc(c.comment_text)}</div>${u&&u.id===c.author_id?`<button class="comment-delete" onclick="deleteComment(${c.id})">Удалить</button>`:''}</div></div>`}
+
+async function toggleLike(id){
+  const u=await Portal.user();
+  if(!u)return location.href='auth.html';
+  const {data:existing,error:checkErr}=await Portal.db.from('meme_likes').select('id').eq('meme_id',id).eq('user_id',u.id).maybeSingle();
+  if(checkErr)return alert(checkErr.message);
+  const r=existing?await Portal.db.from('meme_likes').delete().eq('id',existing.id):await Portal.db.from('meme_likes').insert({meme_id:id,user_id:u.id});
+  if(r.error)return alert(r.error.message);
+  const count=await Portal.db.from('meme_like_counts').select('likes_count').eq('meme_id',id).maybeSingle();
+  const btn=document.querySelector(`[data-like="${id}"]`);
+  if(btn){const liked=!existing;btn.classList.toggle('liked',liked);btn.firstChild.textContent=liked?'❤️ ':'🤍 ';document.getElementById('likes-'+id).textContent=count.data?.likes_count||0;}
+}
+
+async function addComment(e,id){
+  e.preventDefault();
+  const u=await Portal.user();if(!u)return location.href='auth.html';
+  const input=e.target.querySelector('input');const text=input.value.trim();if(!text)return;
+  const r=await Portal.db.from('meme_comments').insert({meme_id:id,author_id:u.id,comment_text:text}).select().single();
+  if(r.error)return alert(r.error.message);
+  input.value='';
+  const p=await Portal.db.from('safe_author').select('id,nickname,avatar_emoji').eq('id',u.id).maybeSingle();
+  const box=document.getElementById('comments-'+id);box.insertAdjacentHTML('beforeend',commentHtml(r.data,{[u.id]:p.data||{}},u));
+  const card=document.getElementById('meme-'+id);const count=card.querySelector('.comment-count');count.textContent='💬 '+box.children.length;
+}
+
+async function deleteComment(id){
+  if(!confirm('Удалить комментарий?'))return;
+  const r=await Portal.db.from('meme_comments').delete().eq('id',id);
+  if(r.error)return alert(r.error.message);
+  document.getElementById('comment-'+id)?.remove();
+}
+
+form.onsubmit=async e=>{e.preventDefault();const u=await Portal.user();if(!u)return location.href='auth.html';hide(notice);const file=image.files[0];if(!file||file.size>50*1024*1024)return msg(notice,'Файл должен быть до 50 МБ.');const ext=(file.name.split('.').pop()||'jpg').toLowerCase(),path=`${u.id}/${crypto.randomUUID()}.${ext}`;const up=await Portal.db.storage.from('memes').upload(path,file,{contentType:file.type,upsert:false});if(up.error)return msg(notice,up.error.message);const {data:pub}=Portal.db.storage.from('memes').getPublicUrl(path);const r=await Portal.db.from('memes').insert({author_id:u.id,caption:caption.value.trim(),image_path:path,image_url:pub.publicUrl,status:'pending'});if(r.error)return msg(notice,r.error.message);e.target.reset();msg(notice,'Мем отправлен на модерацию.','success')};load();
 </script></body></html>

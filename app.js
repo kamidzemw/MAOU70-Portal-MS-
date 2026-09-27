@@ -6,6 +6,15 @@ const fmt = d => new Intl.DateTimeFormat('ru-RU',{dateStyle:'medium',timeStyle:'
 const MAIN_ADMIN_ID = '4a098f87-b2c0-4aa2-9333-a3e2e4afb44e';
 const nickHtml = (name,id) => `<span class="${id===MAIN_ADMIN_ID?'main-admin-nick':''}">${esc(name)}</span>`;
 
+const mediaHtml = (url,alt='Медиа') => {
+  const safe=esc(url);
+  const clean=String(url||'').split('?')[0].toLowerCase();
+  const isVideo=/\.(mp4|webm|ogg|mov|m4v)$/.test(clean);
+  return isVideo
+    ? `<video class="media-content" src="${safe}" controls preload="metadata" playsinline></video>`
+    : `<a href="${safe}" target="_blank" rel="noopener"><img class="media-content" src="${safe}" alt="${esc(alt)}" loading="lazy"></a>`;
+};
+
 const statusInfo = {
   new:['Новая','new'], in_progress:['В работе','work'], done:['Выполнено','done'], rejected:['Не можем','rejected']
 };
@@ -37,4 +46,4 @@ heartbeat();
 setInterval(heartbeat,30000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')heartbeat()});
 
-window.Portal = {db,esc,fmt,statusInfo,user,profile,msg,hide,MAIN_ADMIN_ID,nickHtml};
+window.Portal = {db,esc,fmt,statusInfo,user,profile,msg,hide,MAIN_ADMIN_ID,nickHtml,mediaHtml};

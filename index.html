@@ -1,0 +1,33 @@
+<!doctype html><html lang="ru"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#19d27c"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg">
+<title>Школьный портал — МАОУ СОШ №70</title><link rel="stylesheet" href="styles.css">
+</head><body><header class="topbar"><div class="wrap topbar-inner">
+<a class="brand" href="index.html"><span class="logo">🏫</span><span>МАОУ СОШ №70</span></a>
+<nav class="nav"><a href="ideas.html">💡 Идеи</a><a href="memes.html">😂 Мемы</a><a href="events.html">📅 События</a><a href="polls.html">🗳 Опросы</a><a href="news.html">📢 Новости</a></nav>
+<div data-auth></div></div></header>
+<main class="wrap hero hero-centered"><div class="kicker">Цифровая школьная среда</div>
+<h1>ШКОЛЬНЫЙ<br><span>ПОРТАЛ</span></h1>
+<p>Всё, что происходит в школьной жизни, — в одном месте. Предлагай идеи, смотри мемы, следи за мероприятиями, участвуй в опросах и узнавай новости.</p>
+<div class="staff-chips">
+<div class="staff-chip"><div class="person-icon">🛡️</div><div><small>Администратор сайта</small><strong>Председатель Совета Первых · Савосин Матвей Алексеевич</strong></div></div>
+<div class="staff-chip"><div class="person-icon">🏫</div><div><small>Директор школы</small><strong>Климцева Ирина Анатольевна</strong></div></div>
+</div>
+<section class="grid" style="margin-top:30px">
+<a class="portal-card ideas" href="ideas.html"><div class="accent"></div><div class="icon">💡</div><h2>Банк идей</h2><p>Предлагай изменения, голосуй и следи за тем, что происходит с идеями.</p><div class="arrow">→</div></a>
+<a class="portal-card memes" href="memes.html"><div class="accent"></div><div class="icon">😂</div><h2>Школьные мемы</h2><p>Мемы учеников с обязательной модерацией перед публикацией.</p><div class="arrow">→</div></a>
+<a class="portal-card events" href="events.html"><div class="accent"></div><div class="icon">📅</div><h2>Мероприятия</h2><p>События школы, даты, места и важные объявления о мероприятиях.</p><div class="arrow">→</div></a>
+<a class="portal-card polls" href="polls.html"><div class="accent"></div><div class="icon">🗳️</div><h2>Опросы</h2><p>Опросы школы и Совета Первых с защитой от повторного голосования.</p><div class="arrow">→</div></a>
+<a class="portal-card news" href="news.html"><div class="accent"></div><div class="icon">📢</div><h2>Новости</h2><p>Новости и важная информация от администрации портала.</p><div class="arrow">→</div></a>
+<a class="portal-card rules" href="rules.html"><div class="accent"></div><div class="icon">📜</div><h2>Правила</h2><p>Что можно публиковать, как работает модерация и почему идея может быть отклонена.</p><div class="arrow">→</div></a>
+</section>
+<section data-admin-link class="admin-home-panel hidden" aria-label="Панель администратора">
+  <a class="admin-home-card" href="admin.html">
+    <div class="admin-home-icon">🛠️</div>
+    <div><div class="admin-home-kicker">Только для администрации</div><h2>Панель администратора</h2><p>Модерация идей и мемов, пользователи, опросы, новости и мероприятия.</p></div>
+    <div class="admin-home-arrow">→</div>
+  </a>
+</section>
+</main><footer class="footer wrap">МАОУ СОШ №70 · Школьный портал</footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="app.js"></script>
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');</script></body></html>

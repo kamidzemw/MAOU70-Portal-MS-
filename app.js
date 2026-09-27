@@ -5,7 +5,7 @@ const db = createClient(window.SUPABASE_URL, window.SUPABASE_PUBLISHABLE_KEY, {
     autoRefreshToken: true,
     detectSessionInUrl: true,
     storage: window.localStorage,
-    storageKey: 'school70-supabase-auth'
+    storageKey: 'school70-v18'
   }
 });
 
